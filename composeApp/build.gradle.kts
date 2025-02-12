@@ -4,6 +4,9 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    id("app.cash.sqldelight") version "2.0.2"
+    kotlin("plugin.serialization") version "2.1.0"
+
 }
 
 kotlin {
@@ -33,11 +36,15 @@ kotlin {
             implementation("org.litote.kmongo:kmongo:4.10.0")
             implementation("org.xerial:sqlite-jdbc:3.36.0.3")
             implementation("com.squareup.sqldelight:sqlite-driver:1.5.5")
+            implementation("com.squareup.sqldelight:runtime:1.5.3")
+            implementation("com.squareup.sqldelight:coroutines-extensions:1.5.3")
 
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
+            implementation("app.cash.sqldelight:sqlite-driver:2.0.2")
+
         }
     }
 }
@@ -54,3 +61,13 @@ compose.desktop {
         }
     }
 }
+
+sqldelight {
+    databases {
+        create("Database") {
+            packageName.set("zty.plo9215")
+            dialect("app.cash.sqldelight:sqlite-3-38-dialect:2.0.2")
+        }
+    }
+}
+

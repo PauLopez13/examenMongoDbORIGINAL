@@ -15,165 +15,57 @@ import org.bson.Document
 import org.bson.types.ObjectId
 
 
-fun insertUser(user: User) {
-    MongoDB.userCollection.insertOne(user)
-}
-
-fun listUsers(): List<User> {
-    val users = MongoDB.userCollection.find().toList()
-    users.forEach { user ->
-        println("User: ${user.name.first} ${user.name.last}, Email: ${user.email}")
-    }
-    return users
-}
-
-fun updateUser(name: Name, newUser: User) {
-    MongoDB.userCollection.updateOne(
-        eq("name", Document("first", name.first).append("last", name.last)),
-        set("name", Document("first", newUser.name.first).append("last", newUser.name.last))
-    )
-}
-
-fun deleteUser(name: Name) {
-    MongoDB.userCollection.deleteOne(eq("name", Document("first", name.first).append("last", name.last)))
-}
-
 @Composable
-fun UserInterface() {
-    var firstName by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var users by remember { mutableStateOf(listOf<User>()) }
-    var showInsertForm by remember { mutableStateOf(false) }
-    var showListForm by remember { mutableStateOf(false) }
-    var showUpdateForm by remember { mutableStateOf(false) }
-    var showDeleteForm by remember { mutableStateOf(false) }
+fun RssFeedInterface() {
+    var url by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf("") }
+    var feeds by remember { mutableStateOf(listOf<RssFeed>()) }
+
+    LaunchedEffect(Unit) {
+        feeds = MongoDB.listFeeds()
+    }
 
     Column(Modifier.padding(16.dp)) {
-        Text("User Management", fontSize = 24.sp, modifier = Modifier.padding(bottom = 16.dp))
+        Text("RSS Feed Management", fontSize = 24.sp, modifier = Modifier.padding(bottom = 16.dp))
 
-        if (showInsertForm) {
-            Column {
-                OutlinedTextField(
-                    value = firstName,
-                    onValueChange = { firstName = it },
-                    label = { Text("First Name") },
-                    modifier = Modifier.fillMaxWidth().padding(8.dp)
-                )
-                OutlinedTextField(
-                    value = lastName,
-                    onValueChange = { lastName = it },
-                    label = { Text("Last Name") },
-                    modifier = Modifier.fillMaxWidth().padding(8.dp)
-                )
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email") },
-                    modifier = Modifier.fillMaxWidth().padding(8.dp)
-                )
-                Button(
-                    onClick = {
-                        val nameObj = Name(firstName, lastName)
-                        val user = User(ObjectId(), nameObj, email)
-                        insertUser(user)
-                        users = listUsers()
-                        showInsertForm = false
-                    },
-                    modifier = Modifier.padding(8.dp)
-                ) {
-                    Text("Submit")
-                }
-            }
-        } else {
-            Button(onClick = { showInsertForm = true }, modifier = Modifier.padding(8.dp)) {
-                Text("Insert")
-            }
+        OutlinedTextField(
+            value = url,
+            onValueChange = { url = it },
+            label = { Text("Feed URL") },
+            modifier = Modifier.fillMaxWidth().padding(8.dp)
+        )
+        OutlinedTextField(
+            value = title,
+            onValueChange = { title = it },
+            label = { Text("Feed Title") },
+            modifier = Modifier.fillMaxWidth().padding(8.dp)
+        )
+        Button(
+            onClick = {
+                val newFeed = RssFeed(url = url, title = title)
+                MongoDB.insertFeed(newFeed)
+                feeds = MongoDB.listFeeds()
+                url = ""
+                title = ""
+            },
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Text("Add Feed")
         }
 
-        if (showListForm) {
-            Column {
-                Button(onClick = { users = listUsers() }, modifier = Modifier.padding(8.dp)) {
-                    Text("Refresh List")
-                }
-                users.forEach { user ->
-                    Text("NOMBRE: ${user.name.first} ${user.name.last}, Email: ${user.email}", modifier = Modifier.padding(8.dp))
-                }
-            }
-        } else {
-            Button(onClick = { showListForm = true }, modifier = Modifier.padding(8.dp)) {
-                Text("List")
-            }
-        }
-
-        if (showUpdateForm) {
-            Column {
-                OutlinedTextField(
-                    value = firstName,
-                    onValueChange = { firstName = it },
-                    label = { Text("First Name") },
-                    modifier = Modifier.fillMaxWidth().padding(8.dp)
-                )
-                OutlinedTextField(
-                    value = lastName,
-                    onValueChange = { lastName = it },
-                    label = { Text("Last Name") },
-                    modifier = Modifier.fillMaxWidth().padding(8.dp)
-                )
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email") },
-                    modifier = Modifier.fillMaxWidth().padding(8.dp)
-                )
+        Text("Feeds List:", fontSize = 18.sp, modifier = Modifier.padding(top = 16.dp))
+        feeds.forEach { feed ->
+            Row(modifier = Modifier.padding(8.dp)) {
+                Text("Title: ${feed.title}, URL: ${feed.url}")
+                Spacer(modifier = Modifier.width(8.dp))
                 Button(
                     onClick = {
-                        val nameObj = Name(firstName, lastName)
-                        val newUser = User(ObjectId(), nameObj, email)
-                        updateUser(nameObj, newUser)
-                        users = listUsers()
-                        showUpdateForm = false
-                    },
-                    modifier = Modifier.padding(8.dp)
-                ) {
-                    Text("Update")
-                }
-            }
-        } else {
-            Button(onClick = { showUpdateForm = true }, modifier = Modifier.padding(8.dp)) {
-                Text("Update")
-            }
-        }
-
-        if (showDeleteForm) {
-            Column {
-                OutlinedTextField(
-                    value = firstName,
-                    onValueChange = { firstName = it },
-                    label = { Text("First Name") },
-                    modifier = Modifier.fillMaxWidth().padding(8.dp)
-                )
-                OutlinedTextField(
-                    value = lastName,
-                    onValueChange = { lastName = it },
-                    label = { Text("Last Name") },
-                    modifier = Modifier.fillMaxWidth().padding(8.dp)
-                )
-                Button(
-                    onClick = {
-                        val nameObj = Name(firstName, lastName)
-                        deleteUser(nameObj)
-                        users = listUsers()
-                        showDeleteForm = false
-                    },
-                    modifier = Modifier.padding(8.dp)
+                        MongoDB.deleteFeed(feed.url)
+                        feeds = MongoDB.listFeeds()
+                    }
                 ) {
                     Text("Delete")
                 }
-            }
-        } else {
-            Button(onClick = { showDeleteForm = true }, modifier = Modifier.padding(8.dp)) {
-                Text("Delete")
             }
         }
     }
