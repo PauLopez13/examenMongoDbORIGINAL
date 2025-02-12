@@ -13,11 +13,15 @@ import org.bson.codecs.configuration.CodecRegistry
 import org.bson.codecs.pojo.PojoCodecProvider
 import org.bson.codecs.pojo.annotations.BsonId
 
+object MongoDB2 {
+    const val user = "acme"
+    const val password = "123"
+}
 
 object MongoDB {
     private const val cluster = "acme.ffwhp"
-    private const val user = "acme"
-    private const val password = "123"
+    private const val user = MongoDB2.user
+    private const val password = MongoDB2.password
     private const val url = "mongodb+srv://${user}:${password}@${cluster}.mongodb.net/?retryWrites=true&w=majority&appName=acme"
 
     private val pojoCodecRegistry: CodecRegistry = CodecRegistries.fromRegistries(

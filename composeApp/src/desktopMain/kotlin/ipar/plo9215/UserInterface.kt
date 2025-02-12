@@ -23,6 +23,7 @@ import org.bson.codecs.pojo.annotations.BsonId
 import java.io.Serializable
 
 
+
 @Composable
 fun UserInterface() {
     var isLoggedIn by remember { mutableStateOf(false) }
@@ -70,8 +71,10 @@ fun LoginScreen(onLogin: () -> Unit) {
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
-                if (Database.getUser(username)?.password == password) {
+                if (username == MongoDB2.user && password == MongoDB2.password) {
                     onLogin()
+                } else {
+                    println("Credenciales incorrectas. Usuario: $username, Contraseña: $password")
                 }
             },
             modifier = Modifier.fillMaxWidth()
