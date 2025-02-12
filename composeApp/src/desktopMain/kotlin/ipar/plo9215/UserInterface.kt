@@ -52,7 +52,6 @@ fun UserInterface() {
     Column(Modifier.padding(16.dp)) {
         Text("User Management", fontSize = 24.sp, modifier = Modifier.padding(bottom = 16.dp))
 
-        // Insert User Section
         if (showInsertForm) {
             Column {
                 OutlinedTextField(
@@ -92,7 +91,6 @@ fun UserInterface() {
             }
         }
 
-        // List Users Section
         if (showListForm) {
             Column {
                 Button(onClick = { users = listUsers() }, modifier = Modifier.padding(8.dp)) {
@@ -108,7 +106,6 @@ fun UserInterface() {
             }
         }
 
-        // Update User Section
         if (showUpdateForm) {
             Column {
                 OutlinedTextField(
@@ -148,7 +145,6 @@ fun UserInterface() {
             }
         }
 
-        // Delete User Section
         if (showDeleteForm) {
             Column {
                 OutlinedTextField(

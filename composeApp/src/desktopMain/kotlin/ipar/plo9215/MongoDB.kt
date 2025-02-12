@@ -27,5 +27,22 @@ object MongoDB {
 
     private val client: MongoClient = MongoClients.create(settings)
     private val database: MongoDatabase = client.getDatabase("Users")
-    val userCollection: MongoCollection<User> = database.getCollection("testis", User::class.java)
+    val userCollection: MongoCollection<User> = database.getCollection("testis", User::class.java) //ACORDARSE DE BORRAR.+++++++++++++++++++++++++++++++
+
+    val rssCollection: MongoCollection<RssFeed> = database.getCollection("feeds", RssFeed::class.java)
+
+
+    fun insertFeed(feed: RssFeed) {
+        rssCollection.insertOne(feed)
+    }
+
+    fun listFeeds(): List<RssFeed> {
+        return rssCollection.find().toList()
+    }
+
+    fun deleteFeed(url: String) {
+        rssCollection.deleteOne(Document("url", url))
+    }
+
+
 }

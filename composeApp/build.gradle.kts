@@ -27,6 +27,13 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+            implementation("org.jetbrains.compose.ui:ui:1.4.0")
+            implementation("org.jetbrains.compose.material:material:1.4.0")
+            implementation("org.litote.kmongo:kmongo:4.10.0")
+            implementation("org.xerial:sqlite-jdbc:3.36.0.3")
+            implementation("com.squareup.sqldelight:sqlite-driver:1.5.5")
+
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
