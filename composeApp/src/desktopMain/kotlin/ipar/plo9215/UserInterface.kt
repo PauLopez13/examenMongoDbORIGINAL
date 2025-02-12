@@ -21,6 +21,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.unit.dp
 import org.bson.codecs.pojo.annotations.BsonId
 import java.io.Serializable
+import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
+
 
 
 
@@ -33,18 +35,57 @@ fun UserInterface() {
         LoginScreen(onLogin = { isLoggedIn = true })
     } else {
         Column(modifier = Modifier.padding(16.dp)) {
-            Button(onClick = { feeds = Database.getFeeds() }) {
+            Button(onClick = { feeds = MongoDB.listFeeds() }) {
                 Text("Refresh Feeds")
             }
+            Spacer(modifier = Modifier.height(16.dp))
+            AddFeedScreen(onAddFeed = { newFeed ->
+                MongoDB.insertFeed(newFeed)
+                feeds = MongoDB.listFeeds()
+            })
             Spacer(modifier = Modifier.height(16.dp))
             FeedListScreen(
                 feeds = feeds,
                 onDeleteFeed = { url ->
                     MongoDB.deleteFeed(url)
-                    Database.deleteFeed(url)
-                    feeds = feeds.filter { it.url != url }
+                    feeds = MongoDB.listFeeds()
                 }
             )
+        }
+    }
+}
+
+@Composable
+fun AddFeedScreen(onAddFeed: (RssFeed) -> Unit) {
+    var url by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf("") }
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        OutlinedTextField(
+            value = url,
+            onValueChange = { url = it },
+            label = { Text("Feed URL") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedTextField(
+            value = title,
+            onValueChange = { title = it },
+            label = { Text("Feed Title") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = {
+                if (url.isNotEmpty() && title.isNotEmpty()) {
+                    onAddFeed(RssFeed(url = url, title = title))
+                    url = ""
+                    title = ""
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Add Feed")
         }
     }
 }

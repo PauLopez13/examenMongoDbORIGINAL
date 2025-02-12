@@ -16,6 +16,8 @@ kotlin {
         val desktopMain by getting
         
         commonMain.dependencies {
+            implementation("androidx.collection:collection:1.2.0")
+
             implementation("org.mongodb:mongodb-driver-sync:4.11.1")
             implementation("org.mongodb:mongodb-driver-core:4.11.1")
             implementation("org.mongodb:mongodb-driver-legacy:4.11.1")
