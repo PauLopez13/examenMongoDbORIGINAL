@@ -15,22 +15,26 @@ import org.bson.codecs.pojo.annotations.BsonId
 
 
 object MongoDB {
+    private const val cluster = "acme.ffwhp"
+    private const val user = "acme"
+    private const val password = "123"
+    private const val url = "mongodb+srv://${user}:${password}@${cluster}.mongodb.net/?retryWrites=true&w=majority&appName=acme"
+
     private val pojoCodecRegistry: CodecRegistry = CodecRegistries.fromRegistries(
         MongoClientSettings.getDefaultCodecRegistry(),
         CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build())
     )
 
     private val settings: MongoClientSettings = MongoClientSettings.builder()
-        .applyConnectionString(ConnectionString("mongodb+srv://acme:123@acme.ffwhp.mongodb.net/"))
+        .applyConnectionString(ConnectionString(url))
         .codecRegistry(pojoCodecRegistry)
         .build()
 
     private val client: MongoClient = MongoClients.create(settings)
     private val database: MongoDatabase = client.getDatabase("Users")
-    val userCollection: MongoCollection<User> = database.getCollection("testis", User::class.java) //ACORDARSE DE BORRAR.+++++++++++++++++++++++++++++++
 
+    val userCollection: MongoCollection<User> = database.getCollection("testis", User::class.java) // ACORDARSE DE BORRAR++++++++++++++++++++++++
     val rssCollection: MongoCollection<RssFeed> = database.getCollection("feeds", RssFeed::class.java)
-
 
     fun insertFeed(feed: RssFeed) {
         rssCollection.insertOne(feed)
@@ -44,5 +48,7 @@ object MongoDB {
         rssCollection.deleteOne(Document("url", url))
     }
 
-
+    fun deleteAllFeeds() {
+        rssCollection.deleteMany(Document())
+    }
 }

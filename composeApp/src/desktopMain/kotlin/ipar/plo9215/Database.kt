@@ -85,4 +85,13 @@ object Database {
             feeds
         } ?: emptyList()
     }
+
+    fun deleteFeed(url: String) {
+        connection?.prepareStatement(
+            "DELETE FROM feeds WHERE url = ?"
+        )?.apply {
+            setString(1, url)
+            executeUpdate()
+        }
+    }
 }

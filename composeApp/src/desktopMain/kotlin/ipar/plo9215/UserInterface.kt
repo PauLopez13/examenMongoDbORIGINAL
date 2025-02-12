@@ -1,6 +1,7 @@
 package ipar.plo9215
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Button
 import androidx.compose.material.OutlinedTextField
@@ -13,58 +14,89 @@ import com.mongodb.client.model.Filters.eq
 import com.mongodb.client.model.Updates.set
 import org.bson.Document
 import org.bson.types.ObjectId
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.unit.dp
+import org.bson.codecs.pojo.annotations.BsonId
+import java.io.Serializable
 
 
 @Composable
-fun RssFeedInterface() {
-    var url by remember { mutableStateOf("") }
-    var title by remember { mutableStateOf("") }
-    var feeds by remember { mutableStateOf(listOf<RssFeed>()) }
+fun UserInterface() {
+    var isLoggedIn by remember { mutableStateOf(false) }
+    var feeds by remember { mutableStateOf<List<RssFeed>>(emptyList()) }
 
-    LaunchedEffect(Unit) {
-        feeds = MongoDB.listFeeds()
+    if (!isLoggedIn) {
+        LoginScreen(onLogin = { isLoggedIn = true })
+    } else {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Button(onClick = { feeds = Database.getFeeds() }) {
+                Text("Refresh Feeds")
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            FeedListScreen(
+                feeds = feeds,
+                onDeleteFeed = { url ->
+                    MongoDB.deleteFeed(url)
+                    Database.deleteFeed(url)
+                    feeds = feeds.filter { it.url != url }
+                }
+            )
+        }
     }
+}
 
-    Column(Modifier.padding(16.dp)) {
-        Text("RSS Feed Management", fontSize = 24.sp, modifier = Modifier.padding(bottom = 16.dp))
+@Composable
+fun LoginScreen(onLogin: () -> Unit) {
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
 
+    Column(modifier = Modifier.padding(16.dp)) {
         OutlinedTextField(
-            value = url,
-            onValueChange = { url = it },
-            label = { Text("Feed URL") },
-            modifier = Modifier.fillMaxWidth().padding(8.dp)
+            value = username,
+            onValueChange = { username = it },
+            label = { Text("Username") },
+            modifier = Modifier.fillMaxWidth()
         )
+        Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
-            value = title,
-            onValueChange = { title = it },
-            label = { Text("Feed Title") },
-            modifier = Modifier.fillMaxWidth().padding(8.dp)
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Password") },
+            modifier = Modifier.fillMaxWidth()
         )
+        Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
-                val newFeed = RssFeed(url = url, title = title)
-                MongoDB.insertFeed(newFeed)
-                feeds = MongoDB.listFeeds()
-                url = ""
-                title = ""
+                if (Database.getUser(username)?.password == password) {
+                    onLogin()
+                }
             },
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Add Feed")
+            Text("Login")
         }
+    }
+}
 
-        Text("Feeds List:", fontSize = 18.sp, modifier = Modifier.padding(top = 16.dp))
-        feeds.forEach { feed ->
-            Row(modifier = Modifier.padding(8.dp)) {
-                Text("Title: ${feed.title}, URL: ${feed.url}")
-                Spacer(modifier = Modifier.width(8.dp))
-                Button(
-                    onClick = {
-                        MongoDB.deleteFeed(feed.url)
-                        feeds = MongoDB.listFeeds()
+@Composable
+fun FeedListScreen(feeds: List<RssFeed>, onDeleteFeed: (String) -> Unit) {
+    LazyColumn(modifier = Modifier.padding(16.dp)) {
+        items(feeds) { feed ->
+            Card(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(text = feed.title, style = MaterialTheme.typography.h6)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = feed.url, style = MaterialTheme.typography.body1)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = { onDeleteFeed(feed.url) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Delete Feed")
                     }
-                ) {
-                    Text("Delete")
                 }
             }
         }
