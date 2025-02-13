@@ -32,8 +32,12 @@ fun UserInterface() {
     val coroutineScope = rememberCoroutineScope()
 
     if (!isLoggedIn) {
-        LoginScreen(onLogin = { isLoggedIn = true })
+        LoginScreen(onLogin = { fetchedFeeds ->
+            isLoggedIn = true
+            feeds = fetchedFeeds
+        })
     } else {
+
         Column(modifier = Modifier.padding(16.dp)) {
             Button(onClick = {
                 coroutineScope.launch {
@@ -133,10 +137,11 @@ fun AddFeedScreen(onAddFeed: (RssFeed) -> Unit) {
 }
 
 @Composable
-fun LoginScreen(onLogin: () -> Unit) {
+fun LoginScreen(onLogin: (List<RssFeed>) -> Unit) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var autoLogin by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         val existingUser = Database.getUser(MongoDB2.user)
@@ -148,7 +153,10 @@ fun LoginScreen(onLogin: () -> Unit) {
     }
 
     if (autoLogin) {
-        onLogin()
+        coroutineScope.launch {
+            val feeds = MongoDB.listFeeds()
+            onLogin(feeds)
+        }
     } else {
         Column(modifier = Modifier.padding(16.dp)) {
             OutlinedTextField(
@@ -169,7 +177,10 @@ fun LoginScreen(onLogin: () -> Unit) {
                 onClick = {
                     if (username == MongoDB2.user && password == MongoDB2.password) {
                         Database.saveUser(username, password)
-                        onLogin()
+                        coroutineScope.launch {
+                            val feeds = MongoDB.listFeeds()
+                            onLogin(feeds)
+                        }
                     } else {
                         println("Credenciales incorrectas. Usuario: $username, Contraseña: $password")
                     }
@@ -181,7 +192,6 @@ fun LoginScreen(onLogin: () -> Unit) {
         }
     }
 }
-
 @Composable
 fun FeedListScreen(feeds: List<RssFeed>, onDeleteFeed: (String) -> Unit) {
     LazyColumn(modifier = Modifier.padding(16.dp)) {
