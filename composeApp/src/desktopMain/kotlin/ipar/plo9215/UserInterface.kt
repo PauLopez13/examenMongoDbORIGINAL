@@ -126,38 +126,51 @@ fun AddFeedScreen(onAddFeed: (RssFeed) -> Unit) {
 fun LoginScreen(onLogin: () -> Unit) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var autoLogin by remember { mutableStateOf(false) }
 
-    Column(modifier = Modifier.padding(16.dp)) {
-        OutlinedTextField(
-            value = username,
-            onValueChange = { username = it },
-            label = { Text("Username") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = {
-                if (username == MongoDB2.user && password == MongoDB2.password) {
-                    Database.saveUser(username, password)
-                    onLogin()
-                } else {
-                    println("Credenciales incorrectas. Usuario: $username, Contraseña: $password")
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Login")
+    LaunchedEffect(Unit) {
+        val existingUser = Database.getUser(MongoDB2.user)
+        if (existingUser != null) {
+            username = existingUser.username
+            password = existingUser.password
+            autoLogin = true
+        }
+    }
+
+    if (autoLogin) {
+        onLogin()
+    } else {
+        Column(modifier = Modifier.padding(16.dp)) {
+            OutlinedTextField(
+                value = username,
+                onValueChange = { username = it },
+                label = { Text("Username") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = {
+                    if (username == MongoDB2.user && password == MongoDB2.password) {
+                        Database.saveUser(username, password)
+                        onLogin()
+                    } else {
+                        println("Credenciales incorrectas. Usuario: $username, Contraseña: $password")
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Login")
+            }
         }
     }
 }
-
 @Composable
 fun FeedListScreen(feeds: List<RssFeed>, onDeleteFeed: (String) -> Unit) {
     LazyColumn(modifier = Modifier.padding(16.dp)) {
