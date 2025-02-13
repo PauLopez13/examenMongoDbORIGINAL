@@ -17,12 +17,16 @@ kotlin {
         
         commonMain.dependencies {
             implementation("androidx.collection:collection:1.2.0")
-
-            implementation("org.mongodb:mongodb-driver-sync:4.11.1")
-            implementation("org.mongodb:mongodb-driver-core:4.11.1")
-            implementation("org.mongodb:mongodb-driver-legacy:4.11.1")
-            implementation("org.mongodb:bson:4.11.1")
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
+            implementation("org.mongodb:mongodb-driver-kotlin-coroutine:5.3.0")
             implementation("org.slf4j:slf4j-nop:1.7.36")
+            implementation("org.litote.kmongo:kmongo-coroutine:4.5.0")
+            implementation("org.litote.kmongo:kmongo-async:4.5.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
+            implementation("org.litote.kmongo:kmongo:4.5.0")
+            implementation("org.litote.kmongo:kmongo-coroutine:4.5.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
+
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
             implementation(compose.runtime)
             implementation(compose.foundation)

@@ -1,18 +1,19 @@
 package ipar.plo9215
 
 import com.mongodb.ConnectionString
-import com.mongodb.client.MongoClient
-import com.mongodb.client.MongoClients
-import com.mongodb.client.MongoCollection
-import com.mongodb.client.MongoDatabase
-import org.bson.Document
-import org.bson.types.ObjectId
 import com.mongodb.MongoClientSettings
-import ipar.plo9215.MongoDB2.cluster
+import com.mongodb.ServerApi
+import com.mongodb.ServerApiVersion
+import com.mongodb.client.model.Filters
+import com.mongodb.kotlin.client.coroutine.MongoClient
+import com.mongodb.kotlin.client.coroutine.MongoCollection
+import com.mongodb.kotlin.client.coroutine.MongoDatabase
+import kotlinx.coroutines.flow.toList
+import org.bson.Document
 import org.bson.codecs.configuration.CodecRegistries
 import org.bson.codecs.configuration.CodecRegistry
 import org.bson.codecs.pojo.PojoCodecProvider
-import org.bson.codecs.pojo.annotations.BsonId
+import org.bson.types.ObjectId
 
 object MongoDB2 {
     const val user = "acme"
@@ -23,7 +24,7 @@ object MongoDB2 {
 object MongoDB {
     private const val user = MongoDB2.user
     private const val password = MongoDB2.password
-    private const val url = "mongodb+srv://${user}:${password}@${cluster}.mongodb.net/?retryWrites=true&w=majority&appName=acme"
+    private const val url = "mongodb+srv://${user}:${password}@${MongoDB2.cluster}.mongodb.net/?retryWrites=true&w=majority&appName=acme"
 
     private val pojoCodecRegistry: CodecRegistry = CodecRegistries.fromRegistries(
         MongoClientSettings.getDefaultCodecRegistry(),
@@ -33,27 +34,48 @@ object MongoDB {
     private val settings: MongoClientSettings = MongoClientSettings.builder()
         .applyConnectionString(ConnectionString(url))
         .codecRegistry(pojoCodecRegistry)
+        .serverApi(ServerApi.builder().version(ServerApiVersion.V1).build())
         .build()
 
-    private val client: MongoClient = MongoClients.create(settings)
+    private val client = MongoClient.create(settings)
     private val database: MongoDatabase = client.getDatabase("Users")
 
-    val userCollection: MongoCollection<User> = database.getCollection("testis", User::class.java) // ACORDARSE DE BORRAR++++++++++++++++++++++++
-    val rssCollection: MongoCollection<RssFeed> = database.getCollection("feeds", RssFeed::class.java)
+    val rssCollection: MongoCollection<RssFeed> = database.getCollection("feeds")
 
-    fun insertFeed(feed: RssFeed) {
-        rssCollection.insertOne(feed)
+    suspend fun insertFeed(feed: RssFeed) {
+        try {
+            rssCollection.insertOne(feed)
+        } catch (e: Exception) {
+            println("Error inserting feed: ${e.message}")
+        }
     }
 
-    fun listFeeds(): List<RssFeed> {
-        return rssCollection.find().toList()
+    suspend fun listFeeds(): List<RssFeed> {
+        return try {
+            rssCollection.find().toList()
+        } catch (e: Exception) {
+            println("Error listing feeds: ${e.message}")
+            emptyList()
+        }
     }
 
-    fun deleteFeed(url: String) {
-        rssCollection.deleteOne(Document("url", url))
+    suspend fun deleteFeed(url: String) {
+        try {
+            rssCollection.deleteOne(Filters.eq("url", url))
+        } catch (e: Exception) {
+            println("Error deleting feed: ${e.message}")
+        }
     }
 
-    fun deleteAllFeeds() {
-        rssCollection.deleteMany(Document())
+    suspend fun deleteAllFeeds() {
+        try {
+            rssCollection.deleteMany(Document())
+        } catch (e: Exception) {
+            println("Error deleting all feeds: ${e.message}")
+        }
+    }
+
+    fun close() {
+        client.close()
     }
 }

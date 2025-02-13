@@ -22,34 +22,41 @@ import androidx.compose.ui.unit.dp
 import org.bson.codecs.pojo.annotations.BsonId
 import java.io.Serializable
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
-
-
-
+import kotlinx.coroutines.launch
 
 @Composable
 fun UserInterface() {
     var isLoggedIn by remember { mutableStateOf(false) }
     var feeds by remember { mutableStateOf<List<RssFeed>>(emptyList()) }
     var showDialog by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
     if (!isLoggedIn) {
         LoginScreen(onLogin = { isLoggedIn = true })
     } else {
         Column(modifier = Modifier.padding(16.dp)) {
-            Button(onClick = { feeds = MongoDB.listFeeds() }) {
+            Button(onClick = {
+                coroutineScope.launch {
+                    feeds = MongoDB.listFeeds()
+                }
+            }) {
                 Text("Refresh Feeds")
             }
             Spacer(modifier = Modifier.height(16.dp))
             AddFeedScreen(onAddFeed = { newFeed ->
-                MongoDB.insertFeed(newFeed)
-                feeds = MongoDB.listFeeds()
+                coroutineScope.launch {
+                    MongoDB.insertFeed(newFeed)
+                    feeds = MongoDB.listFeeds()
+                }
             })
             Spacer(modifier = Modifier.height(16.dp))
             FeedListScreen(
                 feeds = feeds,
                 onDeleteFeed = { url ->
-                    MongoDB.deleteFeed(url)
-                    feeds = MongoDB.listFeeds()
+                    coroutineScope.launch {
+                        MongoDB.deleteFeed(url)
+                        feeds = MongoDB.listFeeds()
+                    }
                 }
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -70,9 +77,11 @@ fun UserInterface() {
                     text = { Text("Are you sure that you want to delete all the database?") },
                     confirmButton = {
                         Button(onClick = {
-                            Database.deleteAllData()
-                            MongoDB.deleteAllFeeds()
-                            showDialog = false
+                            coroutineScope.launch {
+                                Database.deleteAllData()
+                                MongoDB.deleteAllFeeds()
+                                showDialog = false
+                            }
                         }) {
                             Text("Yes")
                         }
@@ -87,6 +96,7 @@ fun UserInterface() {
         }
     }
 }
+
 @Composable
 fun AddFeedScreen(onAddFeed: (RssFeed) -> Unit) {
     var url by remember { mutableStateOf("") }
@@ -171,6 +181,7 @@ fun LoginScreen(onLogin: () -> Unit) {
         }
     }
 }
+
 @Composable
 fun FeedListScreen(feeds: List<RssFeed>, onDeleteFeed: (String) -> Unit) {
     LazyColumn(modifier = Modifier.padding(16.dp)) {
@@ -191,9 +202,4 @@ fun FeedListScreen(feeds: List<RssFeed>, onDeleteFeed: (String) -> Unit) {
             }
         }
     }
-}
-
-fun confirm(message: String): Boolean {
-    //para volver el mensaje q le digamos arriba
-    return true
 }
