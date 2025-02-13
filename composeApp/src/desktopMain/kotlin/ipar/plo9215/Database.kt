@@ -105,4 +105,21 @@ object Database {
             executeUpdate()
         }
     }
+
+    fun deleteUser(username: String) {
+        connection?.prepareStatement(
+            "DELETE FROM users WHERE username = ?"
+        )?.apply {
+            setString(1, username)
+            executeUpdate()
+        }
+    }
+
+    fun deleteAllData() {
+        connection?.createStatement()?.execute("DELETE FROM users")
+        connection?.createStatement()?.execute("DELETE FROM feeds")
+    }
 }
+
+
+

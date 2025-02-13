@@ -30,11 +30,11 @@ import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 fun UserInterface() {
     var isLoggedIn by remember { mutableStateOf(false) }
     var feeds by remember { mutableStateOf<List<RssFeed>>(emptyList()) }
+    var showDialog by remember { mutableStateOf(false) }
 
     if (!isLoggedIn) {
         LoginScreen(onLogin = { isLoggedIn = true })
     } else {
-
         Column(modifier = Modifier.padding(16.dp)) {
             Button(onClick = { feeds = MongoDB.listFeeds() }) {
                 Text("Refresh Feeds")
@@ -52,10 +52,41 @@ fun UserInterface() {
                     feeds = MongoDB.listFeeds()
                 }
             )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = {
+                Database.deleteUser(MongoDB2.user)
+                isLoggedIn = false
+            }) {
+                Text("Logout")
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = { showDialog = true }) {
+                Text("Delete the Database")
+            }
+            if (showDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDialog = false },
+                    title = { Text("Confirm Deletion") },
+                    text = { Text("Are you sure that you want to delete all the database?") },
+                    confirmButton = {
+                        Button(onClick = {
+                            Database.deleteAllData()
+                            MongoDB.deleteAllFeeds()
+                            showDialog = false
+                        }) {
+                            Text("Yes")
+                        }
+                    },
+                    dismissButton = {
+                        Button(onClick = { showDialog = false }) {
+                            Text("No")
+                        }
+                    }
+                )
+            }
         }
     }
 }
-
 @Composable
 fun AddFeedScreen(onAddFeed: (RssFeed) -> Unit) {
     var url by remember { mutableStateOf("") }
@@ -126,6 +157,7 @@ fun LoginScreen(onLogin: () -> Unit) {
         }
     }
 }
+
 @Composable
 fun FeedListScreen(feeds: List<RssFeed>, onDeleteFeed: (String) -> Unit) {
     LazyColumn(modifier = Modifier.padding(16.dp)) {
@@ -146,4 +178,9 @@ fun FeedListScreen(feeds: List<RssFeed>, onDeleteFeed: (String) -> Unit) {
             }
         }
     }
+}
+
+fun confirm(message: String): Boolean {
+    //para volver el mensaje q le digamos arriba
+    return true
 }
