@@ -34,6 +34,7 @@ fun UserInterface() {
     if (!isLoggedIn) {
         LoginScreen(onLogin = { isLoggedIn = true })
     } else {
+
         Column(modifier = Modifier.padding(16.dp)) {
             Button(onClick = { feeds = MongoDB.listFeeds() }) {
                 Text("Refresh Feeds")
@@ -113,6 +114,7 @@ fun LoginScreen(onLogin: () -> Unit) {
         Button(
             onClick = {
                 if (username == MongoDB2.user && password == MongoDB2.password) {
+                    Database.saveUser(username, password)
                     onLogin()
                 } else {
                     println("Credenciales incorrectas. Usuario: $username, Contraseña: $password")
@@ -124,7 +126,6 @@ fun LoginScreen(onLogin: () -> Unit) {
         }
     }
 }
-
 @Composable
 fun FeedListScreen(feeds: List<RssFeed>, onDeleteFeed: (String) -> Unit) {
     LazyColumn(modifier = Modifier.padding(16.dp)) {

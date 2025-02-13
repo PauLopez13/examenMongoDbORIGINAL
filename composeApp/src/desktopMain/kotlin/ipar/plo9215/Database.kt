@@ -33,13 +33,24 @@ object Database {
         )
     }
 
-    fun saveUser(username: String, password: String) {
-        connection?.prepareStatement(
-            "INSERT INTO users (username, password) VALUES (?, ?)"
+    fun saveUser(username: String, password: String): Boolean {
+        val existingUser = connection?.prepareStatement(
+            "SELECT * FROM users WHERE username = ?"
         )?.apply {
             setString(1, username)
-            setString(2, password)
-            executeUpdate()
+        }?.executeQuery()?.next()
+
+        return if (existingUser == true) {
+            false // User already exists
+        } else {
+            connection?.prepareStatement(
+                "INSERT INTO users (username, password) VALUES (?, ?)"
+            )?.apply {
+                setString(1, username)
+                setString(2, password)
+                executeUpdate()
+            }
+            true // User successfully inserted
         }
     }
 
